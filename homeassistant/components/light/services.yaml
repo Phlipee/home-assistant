@@ -15,6 +15,9 @@ turn_on:
     color_name:
       description: A human readable color name.
       example: 'red'
+    hex_color:
+      description: Color for the light in Hex-format.
+      example: '#d341f4'
     xy_color:
       description: Color for the light in XY-format.
       example: '[0.52, 0.43]'

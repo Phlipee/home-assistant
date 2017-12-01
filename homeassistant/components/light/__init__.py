@@ -55,6 +55,7 @@ ATTR_KELVIN = "kelvin"
 ATTR_MIN_MIREDS = "min_mireds"
 ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
+ATTR_HEX_COLOR = "hex_color"
 ATTR_WHITE_VALUE = "white_value"
 
 # Brightness of the light, 0..255 or percentage
@@ -106,6 +107,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_HEX_COLOR, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
         vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                 vol.Coerce(tuple)),
@@ -150,12 +152,13 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             brightness_pct=None, rgb_color=None, xy_color=None,
             color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            profile=None, flash=None, effect=None, color_name=None,
+            hex_color=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
         rgb_color, xy_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
+        profile, flash, effect, color_name, hex_color)
 
 
 @callback
@@ -163,7 +166,8 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   color_temp=None, kelvin=None, white_value=None,
-                  profile=None, flash=None, effect=None, color_name=None):
+                  profile=None, flash=None, effect=None, color_name=None,
+                  hex_color=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -180,6 +184,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_HEX_COLOR, hex_color),
         ] if value is not None
     }
 
@@ -230,6 +235,10 @@ def preprocess_turn_on_alternatives(params):
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
         params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
+    hex_color = params.pop(ATTR_HEX_COLOR, None)
+    if hex_color is not None:
+        params[ATTR_RGB_COLOR] = color_util.hex_to_rgb(hex_color)
 
     kelvin = params.pop(ATTR_KELVIN, None)
     if kelvin is not None:
